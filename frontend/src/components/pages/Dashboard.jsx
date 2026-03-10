@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { StatCard, Card, Button, Badge } from '../ui/index'
-import { BackgroundPaths } from '../ui/background-paths'
+import { GLSLHills } from '../ui/glsl-hills'
 import { constituencyAPI } from '../../services/api'
 
 const TIP = ({ active, payload, label }) => {
@@ -42,7 +42,17 @@ export default function Dashboard() {
 
   return (
     <div className="page-enter space-y-5">
-      <BackgroundPaths title="Welcome Arjun" />
+      <div className="relative flex w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-border1 bg-card2 h-[260px]">
+        <GLSLHills />
+        <div className="space-y-4 pointer-events-none z-10 text-center absolute px-6">
+          <h1 className="font-display font-black text-4xl sm:text-5xl text-white drop-shadow-lg">
+            Namaste, <span className="italic font-thin text-saffron">Arjun</span>
+          </h1>
+          <p className="text-sm font-mono text-white/80 max-w-lg mx-auto drop-shadow-md">
+            You have <strong className="text-saffron">3 pending action items</strong>, 2 events today, and Ward 6 has critical open complaints.
+          </p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Open Complaints" value={totalComplaints} sub={<span className="text-rose-400">▲ 12 since last week</span>} icon="📢" accent="rose" />
