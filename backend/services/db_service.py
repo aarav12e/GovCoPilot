@@ -1,60 +1,85 @@
-import uuid, os
+import uuid, os, json
 from datetime import datetime
-from tinydb import TinyDB, Query
+from pymongo import MongoClient
+from config import MONGO_URI
 
-os.makedirs("data", exist_ok=True)
-_users = TinyDB("data/users.json")
-_docs  = TinyDB("data/documents.json")
-_evs   = TinyDB("data/events.json")
-_tasks = TinyDB("data/tasks.json")
-_const = TinyDB("data/constituency.json")
-Q = Query()
+# Connect to MongoDB Atlas
+client = MongoClient(MONGO_URI)
+db = client['govcopilot']
+
+_users = db['users']
+_docs  = db['documents']
+_evs   = db['events']
+_tasks = db['tasks']
+_const = db['constituency']
+
+# Remove MongoDB's internal `_id` so frontend doesn't break
+def clean_mongo_output(doc):
+    if doc and '_id' in doc:
+        del doc['_id']
+    return doc
 
 # Users
 def create_user(d):
-    d["user_id"] = str(uuid.uuid4()); d["created_at"] = datetime.utcnow().isoformat()
-    _users.insert(d); return d
+    d["user_id"] = str(uuid.uuid4())
+    d["created_at"] = datetime.utcnow().isoformat()
+    _users.insert_one(d.copy())
+    return clean_mongo_output(d)
 
 def get_user_by_email(email):
-    r = _users.search(Q.email == email); return r[0] if r else None
+    return clean_mongo_output(_users.find_one({"email": email}))
 
 def get_user_by_id(uid):
-    r = _users.search(Q.user_id == uid); return r[0] if r else None
+    return clean_mongo_output(_users.find_one({"user_id": uid}))
 
 # Documents
 def save_doc_meta(meta):
-    meta["created_at"] = datetime.utcnow().isoformat(); _docs.insert(meta); return meta
+    meta["created_at"] = datetime.utcnow().isoformat()
+    _docs.insert_one(meta.copy())
+    return clean_mongo_output(meta)
 
 def get_doc(doc_id):
-    r = _docs.search(Q.doc_id == doc_id); return r[0] if r else None
+    return clean_mongo_output(_docs.find_one({"doc_id": doc_id}))
 
 def list_docs():
-    return _docs.all()
+    return [clean_mongo_output(d) for d in _docs.find()]
 
 def update_doc_summary(doc_id, summary):
-    _docs.update({"summary": summary, "summarized_at": datetime.utcnow().isoformat()}, Q.doc_id == doc_id)
+    _docs.update_one(
+        {"doc_id": doc_id},
+        {"$set": {"summary": summary, "summarized_at": datetime.utcnow().isoformat()}}
+    )
 
 # Events
 def create_event(d):
-    d["event_id"] = str(uuid.uuid4()); d["created_at"] = datetime.utcnow().isoformat()
-    _evs.insert(d); return d
+    d["event_id"] = str(uuid.uuid4())
+    d["created_at"] = datetime.utcnow().isoformat()
+    _evs.insert_one(d.copy())
+    return clean_mongo_output(d)
 
 def list_events():
-    return sorted(_evs.all(), key=lambda x: x.get("date", ""))
+    events = [clean_mongo_output(d) for d in _evs.find()]
+    return sorted(events, key=lambda x: x.get("date", ""))
 
 def delete_event(event_id):
-    _evs.remove(Q.event_id == event_id)
+    _evs.delete_one({"event_id": event_id})
 
 # Tasks
 def create_task(d):
-    d["task_id"] = str(uuid.uuid4()); d["status"] = "pending"; d["created_at"] = datetime.utcnow().isoformat()
-    _tasks.insert(d); return d
+    d["task_id"] = str(uuid.uuid4())
+    d["status"] = "pending"
+    d["created_at"] = datetime.utcnow().isoformat()
+    _tasks.insert_one(d.copy())
+    return clean_mongo_output(d)
 
 def list_tasks():
-    return _tasks.all()
+    return [clean_mongo_output(d) for d in _tasks.find()]
 
 def update_task(task_id, status):
-    _tasks.update({"status": status, "updated_at": datetime.utcnow().isoformat()}, Q.task_id == task_id)
+    _tasks.update_one(
+        {"task_id": task_id},
+        {"$set": {"status": status, "updated_at": datetime.utcnow().isoformat()}}
+    )
 
 # Constituency
 SEED = {
@@ -81,8 +106,57 @@ SEED = {
 }
 
 def get_constituency():
-    existing = _const.all()
+    existing = _const.find_one()
     if not existing:
-        _const.insert(SEED)
+        _const.insert_one(SEED.copy())
         return SEED
-    return existing[0]
+    return clean_mongo_output(existing)
+
+
+# =========================================================================
+# 🔄 TINYDB TO MONGODB LOCAL DATA MIGRATION
+# =========================================================================
+def parse_tinydb_json(filepath):
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            # TinyDB stores lists inside {"_default": {"1": {...}, "2": {...}}}
+            if "_default" in data:
+                return list(data["_default"].values())
+    except Exception:
+        pass
+    return []
+
+def run_migration():
+    print("Checking database migration status...")
+    if _users.count_documents({}) == 0:
+        local_pts = parse_tinydb_json("data/users.json")
+        if local_pts:
+            _users.insert_many(local_pts)
+            print(f"Migrated {len(local_pts)} users to MongoDB.")
+            
+    if _docs.count_documents({}) == 0:
+        local_pts = parse_tinydb_json("data/documents.json")
+        if local_pts:
+            _docs.insert_many(local_pts)
+            print(f"Migrated {len(local_pts)} documents to MongoDB.")
+            
+    if _evs.count_documents({}) == 0:
+        local_pts = parse_tinydb_json("data/events.json")
+        if local_pts:
+            _evs.insert_many(local_pts)
+            print(f"Migrated {len(local_pts)} events to MongoDB.")
+            
+    if _tasks.count_documents({}) == 0:
+        local_pts = parse_tinydb_json("data/tasks.json")
+        if local_pts:
+            _tasks.insert_many(local_pts)
+            print(f"Migrated {len(local_pts)} tasks to MongoDB.")
+            
+    print("Migration check complete.")
+
+# Attempt runtime migration
+try:
+    run_migration()
+except Exception as e:
+    print("Migration failed:", e)
