@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { WarpBackground } from '../ui/warp-background'
 
 export default function Login({ onLogin }) {
     const [username, setUsername] = useState('leader')
@@ -26,17 +27,11 @@ export default function Login({ onLogin }) {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-bg relative overflow-hidden">
-            {/* Background Animations */}
-            <div className="absolute inset-0 z-0">
-                <div className="absolute top-1/4 left-1/4 w-[40rem] h-[40rem] bg-indigo-900/20 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-[40rem] h-[40rem] bg-orange-900/20 rounded-full mix-blend-screen filter blur-[100px] animate-pulse" style={{ animationDelay: "2s" }}></div>
-            </div>
-
-            <div className="card w-full max-w-sm bg-base-300 shadow-2xl z-10 border border-border1/50 backdrop-blur-xl">
+        <WarpBackground>
+            <div className="card w-full bg-base-300 shadow-[0_0_50px_rgba(0,0,0,0.5)] z-10 border border-border1/50 backdrop-blur-xl">
                 <div className="card-body">
                     <div className="flex flex-col items-center mb-6">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl shadow-lg mb-4">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(99,102,241,0.5)] mb-4">
                             🏛️
                         </div>
                         <h2 className="text-3xl font-display font-black text-white">Gov<span className="text-indigo-400">CoPilot</span></h2>
@@ -52,7 +47,7 @@ export default function Login({ onLogin }) {
                                 type="text"
                                 value={username}
                                 onChange={e => setUsername(e.target.value)}
-                                className="input input-bordered input-primary w-full bg-base-200/50 focus:bg-base-200 focus:ring-2 focus:ring-primary/50 transition-all"
+                                className="input input-bordered input-primary w-full bg-base-200/50 focus:bg-base-200 focus:ring-2 focus:ring-primary/50 transition-all font-mono"
                                 required
                             />
                         </div>
@@ -65,7 +60,7 @@ export default function Login({ onLogin }) {
                                 type="password"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
-                                className="input input-bordered input-primary w-full bg-base-200/50 focus:bg-base-200 focus:ring-2 focus:ring-primary/50 transition-all"
+                                className="input input-bordered input-primary w-full bg-base-200/50 focus:bg-base-200 focus:ring-2 focus:ring-primary/50 transition-all font-mono"
                                 required
                             />
                         </div>
@@ -73,7 +68,7 @@ export default function Login({ onLogin }) {
                         <div className="form-control mt-6">
                             <button
                                 type="submit"
-                                className={`btn btn-primary w-full shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] ${loading ? 'loading' : ''}`}
+                                className={`btn btn-primary w-full shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-all hover:scale-[1.02] border-0 bg-indigo-600 hover:bg-indigo-500 text-white ${loading ? 'loading' : ''}`}
                                 disabled={loading}
                             >
                                 {loading ? 'Authenticating...' : 'Secure Login'}
@@ -83,10 +78,10 @@ export default function Login({ onLogin }) {
 
                     <div className="divider text-base-content/40 text-sm">Demo Mode</div>
                     <p className="text-center text-xs text-base-content/50">
-                        Use <b>leader</b> / <b>password123</b> to access the portal.
+                        Use <b className="text-indigo-400">leader</b> / <b className="text-indigo-400">password123</b> to access the portal.
                     </p>
                 </div>
             </div>
-        </div>
+        </WarpBackground>
     )
 }
