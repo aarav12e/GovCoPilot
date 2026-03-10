@@ -16,5 +16,10 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [require('daisyui')],
+  daisyui: {
+    themes: ["light", "dark", "cupcake", "synthwave", "cyberpunk", "luxury", "dim"], // Using 'dim' as the default dark premium theme
+    darkTheme: "dim",
+  }
 }
+

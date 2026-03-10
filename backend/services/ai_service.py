@@ -48,7 +48,7 @@ async def call_llm(prompt: str, system: str = "", max_tokens: int = 2000) -> str
     if CLAUDE_OK and claude_client:
         try:
             msg = claude_client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model="claude-3-5-sonnet-20240620",
                 max_tokens=max_tokens,
                 system=system or "You are a helpful AI assistant for Indian government officials.",
                 messages=[{"role": "user", "content": prompt}]
@@ -56,6 +56,10 @@ async def call_llm(prompt: str, system: str = "", max_tokens: int = 2000) -> str
             return msg.content[0].text
         except Exception as e:
             print(f"Claude error: {e}")
+            return f"Claude API Error: {e}"
+
+    if GEMINI_OK or CLAUDE_OK:
+        return "Error: AI models are configured but failed to generate a response."
 
     return _demo(prompt)
 
