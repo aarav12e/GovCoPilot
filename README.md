@@ -111,3 +111,5 @@ Full docs: **http://localhost:8000/docs**
 - Python 3.9–3.13
 - Node.js 18+
 - pip & npm
+
+for hackthon
