@@ -112,4 +112,3 @@ Full docs: **http://localhost:8000/docs**
 - Node.js 18+
 - pip & npm
 
-for hackthon
